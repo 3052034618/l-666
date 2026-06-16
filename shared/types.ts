@@ -151,8 +151,24 @@ export interface Report {
   type: ReportType;
   status: ReportStatus;
   fileUrl?: string;
+  filePath?: string;
   createdAt: string;
   generatedAt?: string;
+}
+
+export interface PushRecord {
+  id: string;
+  taskId: string;
+  taskName: string;
+  reportId?: string;
+  reportName?: string;
+  safetyIndex?: number;
+  pushedBy: string;
+  pushedByName: string;
+  pushedAt: string;
+  status: 'pending' | 'received' | 'failed';
+  receivedAt?: string;
+  remark?: string;
 }
 
 export interface ParamAdjustment {

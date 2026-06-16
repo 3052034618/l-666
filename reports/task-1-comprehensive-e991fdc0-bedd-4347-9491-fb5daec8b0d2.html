@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>综合评估报告 - 处置库模拟任务-1号</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #1f2937;
+      line-height: 1.6;
+      background: #f3f4f6;
+      padding: 0;
+    }
+    .report-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .report-header {
+      background: linear-gradient(135deg, #0A2463 0%, #3E92CC 100%);
+      color: white;
+      padding: 50px 40px;
+    }
+    .report-header h1 {
+      font-size: 32px;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+    .report-header .subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 24px;
+    }
+    .report-header .meta {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    .report-body {
+      padding: 40px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .section h2 {
+      color: #0A2463;
+      font-size: 22px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #3E92CC;
+      margin-bottom: 20px;
+    }
+    .section h3 {
+      color: #1f2937;
+      font-size: 17px;
+      margin: 20px 0 12px 0;
+    }
+    .section p {
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+    .section ul, .section ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+    .section li {
+      margin-bottom: 8px;
+    }
+    table {
+      font-size: 14px;
+      margin: 16px 0;
+    }
+    th {
+      background: #0A2463;
+      color: white;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .param-item {
+      background: #f9fafb;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border-left: 3px solid #3E92CC;
+    }
+    .param-item .label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .param-item .value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .report-footer {
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      padding: 30px 40px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .watermark {
+      text-align: center;
+      color: #d1d5db;
+      font-size: 12px;
+      padding: 10px;
+    }
+    @media print {
+      body { background: white; }
+      .report-container { box-shadow: none; }
+      .report-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <div class="report-header">
+      <h1>高放废物深地质处置库 综合评估报告</h1>
+      <div class="subtitle">热-水-力-化学四场耦合数值模拟评估</div>
+      <div class="meta">
+        <span>📋 任务名称：处置库模拟任务-1号</span>
+        <span>🆔 任务编号：task-1</span>
+        <span>👤 创建人：张安全</span>
+        <span>📅 生成时间：2026/6/17 01:16:36</span>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <div class="section">
+        <h2>任务概况与输入参数</h2>
+        <p>本报告基于热-水-力-化学（THMC）四场耦合数值模拟结果，对高放射性废物深地质处置库的长期安全性能进行综合评估。模拟涵盖 24 个废物包，评估周期为 10000 年。</p>
+        
+        <h3>废物包参数</h3>
+        <div class="params-grid">
+          <div class="param-item"><div class="label">废物类型</div><div class="value">UO2</div></div>
+          <div class="param-item"><div class="label">包壳材料</div><div class="value">硼硅酸盐玻璃</div></div>
+          <div class="param-item"><div class="label">放射性活度</div><div class="value">1.2000e+15 Bq</div></div>
+          <div class="param-item"><div class="label">热输出功率</div><div class="value">1500.00 W</div></div>
+          <div class="param-item"><div class="label">废物包间距</div><div class="value">6.00 m</div></div>
+          <div class="param-item"><div class="label">废物包数量</div><div class="value">24 个</div></div>
+        </div>
+
+        <h3>工程屏障参数</h3>
+        <div class="params-grid">
+          <div class="param-item"><div class="label">缓冲层材料</div><div class="value">膨润土</div></div>
+          <div class="param-item"><div class="label">缓冲层厚度</div><div class="value">0.750 m</div></div>
+          <div class="param-item"><div class="label">渗透系数</div><div class="value">1.0000e-12 m/s</div></div>
+          <div class="param-item"><div class="label">回填材料</div><div class="value">膨润土/砂混合物</div></div>
+          <div class="param-item"><div class="label">回填配比</div><div class="value">70:30</div></div>
+          <div class="param-item"><div class="label">压实度</div><div class="value">95.0%</div></div>
+        </div>
+      </div>
+
+      
+      <div class="section">
+        <h2>一、温度场分析</h2>
+        <p>本章节分析处置库在10000年评估期内的温度场演化特征。废物包的衰变热会引起处置库周围岩石温度升高，温度升高可能影响工程屏障材料性能。</p>
+        
+        <p><strong>分析结果：</strong></p>
+        <ul>
+          <li>最高温度：<strong style="color: #D8315B;">74.32 °C</strong>，出现在约 20 年左右</li>
+          <li>设计阈值：100 °C，当前结果 <span style="color: #10B981;">满足要求</span></li>
+          <li>1000 年时温度回落至 38.47 °C 以下</li>
+        </ul>
+        
+    <h3>温度场关键数据点</h3>
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+      <thead style="background: #f0f4ff;">
+        <tr><th>时间（年）</th><th>最高温度（°C）</th></tr>
+      </thead>
+      <tbody><tr><td>0</td><td>0.00 °C</td></tr><tr><td>10</td><td>36.91 °C</td></tr><tr><td>20</td><td>74.32 °C</td></tr><tr><td>30</td><td>68.56 °C</td></tr><tr><td>40</td><td>61.82 °C</td></tr><tr><td>51</td><td>59.95 °C</td></tr><tr><td>61</td><td>59.24 °C</td></tr><tr><td>71</td><td>59.15 °C</td></tr><tr><td>81</td><td>54.84 °C</td></tr><tr><td>91</td><td>46.38 °C</td></tr></tbody>
+    </table>
+  
+      </div>
+    
+      <div class="section">
+        <h2>二、应力应变分析</h2>
+        <p>本章节分析处置库围岩在温度荷载和渗流荷载作用下的力学响应。围岩的应力应变特性直接关系到处置库的结构稳定性。</p>
+        
+        <p><strong>分析结果：</strong></p>
+        <ul>
+          <li>最大主应力：<strong>20.30 MPa</strong></li>
+          <li>最大应变：0.0490</li>
+          <li>屈服强度：约 30 MPa，当前结果 <span style="color: #10B981;">处于弹性范围</span></li>
+          <li>工程屏障完整性：<span style="color: #10B981;">保持完整</span></li>
+        </ul>
+        
+    <h3>应力应变关键数据点</h3>
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+      <thead style="background: #f0f4ff;">
+        <tr><th>应变 ε</th><th>应力 σ (MPa)</th></tr>
+      </thead>
+      <tbody><tr><td>0.0000</td><td>0.00 MPa</td></tr><tr><td>0.0050</td><td>0.13 MPa</td></tr><tr><td>0.0100</td><td>0.25 MPa</td></tr><tr><td>0.0150</td><td>2.70 MPa</td></tr><tr><td>0.0200</td><td>6.70 MPa</td></tr><tr><td>0.0250</td><td>10.70 MPa</td></tr><tr><td>0.0300</td><td>14.70 MPa</td></tr><tr><td>0.0350</td><td>18.70 MPa</td></tr><tr><td>0.0400</td><td>20.30 MPa</td></tr><tr><td>0.0450</td><td>20.30 MPa</td></tr></tbody>
+    </table>
+  
+      </div>
+    
+      <div class="section">
+        <h2>三、核素迁移分析</h2>
+        <p>本章节分析关键核素在地质介质中的迁移扩散行为。核素的迁移速率和浓度分布直接决定了处置库的辐射安全性能。</p>
+        
+        <p><strong>分析结果：</strong></p>
+        <ul>
+          <li>核素开始显著释放时间：约 50 年后（氧化还原前沿到达）</li>
+          <li>10000 年时最大浓度：<strong>1.0000e-8 mol/L</strong></li>
+          <li>监管限值：1.0 × 10⁻⁵ mol/L，当前结果 <span style="color: #10B981;">低于限值</span></li>
+          <li>核素释放率：0.010000 Bq/(m²·s)</li>
+          <li>工程屏障滞留效果：<span style="color: #10B981;">良好</span></li>
+        </ul>
+        
+    <h3>核素浓度关键数据点</h3>
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+      <thead style="background: #f0f4ff;">
+        <tr><th>时间（年）</th><th>核素浓度（mol/L）</th></tr>
+      </thead>
+      <tbody><tr><td>0</td><td>1.0000e-15 mol/L</td></tr><tr><td>10</td><td>1.0000e-15 mol/L</td></tr><tr><td>20</td><td>1.0000e-15 mol/L</td></tr><tr><td>30</td><td>1.0000e-15 mol/L</td></tr><tr><td>40</td><td>5.3995e-10 mol/L</td></tr><tr><td>51</td><td>1.6432e-9 mol/L</td></tr><tr><td>61</td><td>2.9471e-9 mol/L</td></tr><tr><td>71</td><td>4.4826e-9 mol/L</td></tr><tr><td>81</td><td>6.2188e-9 mol/L</td></tr><tr><td>91</td><td>8.1348e-9 mol/L</td></tr></tbody>
+    </table>
+  
+      </div>
+    
+      <div class="section">
+        <h2>四、综合图表展示</h2>
+        
+    <div id="chart" style="width: 100%; height: 400px; margin: 20px 0;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var chart = echarts.init(document.getElementById('chart'));
+        var option = {
+          title: { text: "处置库温度场变化趋势", left: 'center', textStyle: { fontSize: 16, color: '#0A2463' } },
+          tooltip: { trigger: 'axis' },
+          grid: { left: '10%', right: '5%', bottom: '15%' },
+          xAxis: { 
+            type: type === 'stress' ? 'value' : 'category',
+            name: type === 'stress' ? '应变' : '时间 (年)',
+            nameLocation: 'middle',
+            nameGap: 30,
+            data: type === 'stress' ? undefined : [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100]
+          },
+          yAxis: { type: 'value', name: "温度 (°C)", nameLocation: 'middle', nameGap: 50 },
+          dataZoom: [{ type: 'inside' }, { type: 'slider', height: 20, bottom: 10 }],
+          series: [{"type":"line","smooth":true,"lineStyle":{"width":2,"color":"#D8315B"},"areaStyle":{"color":"rgba(216, 49, 91, 0.15)"},"data":[[0,0],[1,3.4124375312425608],[2,6.899001998096296],[3,10.457460232494007],[4,14.084127513462976],[5,17.773922884882882],[6,21.52044556513883],[7,25.316071428998942],[8,29.152068272698568],[9,33.01872831999275],[10,36.90551619302961],[11,40.80123036025342],[12,44.69417588685252],[13,48.57234615390882],[14,52.423611082439415],[15,56.2359092996478],[16,59.99744161824903],[17,63.696863166634486],[18,67.32347150842782],[19,70.86738812477283],[20,74.31973070119261],[21,73.97407024986656],[22,73.56372302864693],[23,73.0927890913254],[24,72.56597385413363],[25,71.98854108077967],[26,71.36626028866098],[27,70.70534910175373],[28,70.01241112616928],[29,69.29436996910488],[30,68.558400060449],[31,67.81185496824968],[32,67.06219392429315],[33,66.31690729392564],[34,65.58344173479877],[35,64.86912579232785],[36,64.1810966752886],[37,63.5262289431863],[38,62.91106581792961],[39,62.3417538061202],[40,61.82398128519054],[41,61.36292166701692],[42,60.963181706898084],[43,60.62875547437909],[44,60.36298444582863],[45,60.16852411751177],[46,60.047317472749015],[47,60.00057556826925],[48,60.028765433731195],[49,60.13160540531751],[51,59.95384373566052],[52,59.668702337229206],[53,59.447546849344114],[54,59.2848074533137],[55,59.17450576989042],[56,59.11032203606336],[57,59.08566436892957],[58,59.09373938322019],[59,59.127623430056275],[60,59.18033373280566],[61,59.244898711280335],[62,59.31442680765716],[63,59.38217315607234],[64,59.44160347241409],[65,59.48645458095875],[66,59.510791039649185],[67,59.50905737545137],[68,59.47612549476095],[69,59.40733689065347],[70,59.2985393282476],[71,59.14611775093296],[72,58.94701921304983],[73,58.69877170814085],[74,58.39949682547856],[75,58.047916230568276],[76,57.64335202711831],[77,57.18572111796333],[78,56.67552374005849],[79,56.11382640340375],[80,55.50223951511834],[81,54.84289001741912],[82,54.13838941156525],[83,53.39179757856403],[84,52.60658284129543],[85,51.7865787414606],[86,50.93593802820989],[87,50.059084373326286],[88,49.16066234036023],[89,48.24548614211437],[90,47.3184877224011],[91,46.38466469413585],[92,45.449028656729475],[93,44.51655440159805],[94,43.592130495660484],[95,42.68051170922693],[96,41.78627372701802],[97,40.91377054955655],[98,40.067094957229486],[99,39.250042371346694],[100,38.46607840596278]],"name":"温度"}]
+        };
+        chart.setOption(option);
+        window.addEventListener('resize', function() { chart.resize(); });
+      });
+    </script>
+  
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+    <div id="chart" style="width: 100%; height: 400px; margin: 20px 0;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var chart = echarts.init(document.getElementById('chart'));
+        var option = {
+          title: { text: "围岩应力应变曲线", left: 'center', textStyle: { fontSize: 16, color: '#0A2463' } },
+          tooltip: { trigger: 'axis' },
+          grid: { left: '10%', right: '5%', bottom: '15%' },
+          xAxis: { 
+            type: type === 'stress' ? 'value' : 'category',
+            name: type === 'stress' ? '应变' : '时间 (年)',
+            nameLocation: 'middle',
+            nameGap: 30,
+            data: type === 'stress' ? undefined : [0,0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009000000000000001,0.01,0.011,0.012,0.013000000000000001,0.014,0.015,0.016,0.017,0.018000000000000002,0.019,0.02,0.021,0.022,0.023,0.024,0.025,0.026000000000000002,0.027,0.028,0.029,0.03,0.031,0.032,0.033,0.034,0.035,0.036000000000000004,0.037,0.038,0.039,0.04,0.041,0.042,0.043000000000000003,0.044,0.045,0.046,0.047,0.048,0.049]
+          },
+          yAxis: { type: 'value', name: "应力 (MPa)", nameLocation: 'middle', nameGap: 50 },
+          dataZoom: [{ type: 'inside' }, { type: 'slider', height: 20, bottom: 10 }],
+          series: [{"type":"line","smooth":false,"lineStyle":{"width":2,"color":"#3E92CC"},"areaStyle":{"color":"rgba(62, 146, 204, 0.15)"},"data":[[0,0],[0.001,0.025],[0.002,0.05],[0.003,0.075],[0.004,0.1],[0.005,0.125],[0.006,0.15],[0.007,0.175],[0.008,0.2],[0.009000000000000001,0.22500000000000003],[0.01,0.25],[0.011,0.275],[0.012,0.3],[0.013000000000000001,1.1000000000000008],[0.014,1.9000000000000001],[0.015,2.6999999999999993],[0.016,3.5],[0.017,4.300000000000001],[0.018000000000000002,5.100000000000001],[0.019,5.899999999999999],[0.02,6.7],[0.021,7.500000000000001],[0.022,8.299999999999999],[0.023,9.100000000000001],[0.024,9.9],[0.025,10.700000000000003],[0.026000000000000002,11.500000000000002],[0.027,12.3],[0.028,13.100000000000001],[0.029,13.900000000000002],[0.03,14.7],[0.031,15.5],[0.032,16.3],[0.033,17.1],[0.034,17.900000000000002],[0.035,18.700000000000003],[0.036000000000000004,19.500000000000004],[0.037,20.3],[0.038,20.3],[0.039,20.3],[0.04,20.3],[0.041,20.3],[0.042,20.3],[0.043000000000000003,20.3],[0.044,20.3],[0.045,20.3],[0.046,20.3],[0.047,20.3],[0.048,20.3],[0.049,20.3]],"name":"应力"}]
+        };
+        chart.setOption(option);
+        window.addEventListener('resize', function() { chart.resize(); });
+      });
+    </script>
+  
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+    <div id="chart" style="width: 100%; height: 400px; margin: 20px 0;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var chart = echarts.init(document.getElementById('chart'));
+        var option = {
+          title: { text: "关键核素迁移浓度变化", left: 'center', textStyle: { fontSize: 16, color: '#0A2463' } },
+          tooltip: { trigger: 'axis' },
+          grid: { left: '10%', right: '5%', bottom: '15%' },
+          xAxis: { 
+            type: type === 'stress' ? 'value' : 'category',
+            name: type === 'stress' ? '应变' : '时间 (年)',
+            nameLocation: 'middle',
+            nameGap: 30,
+            data: type === 'stress' ? undefined : [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100]
+          },
+          yAxis: { type: 'value', name: "浓度 (mol/L)", nameLocation: 'middle', nameGap: 50 },
+          dataZoom: [{ type: 'inside' }, { type: 'slider', height: 20, bottom: 10 }],
+          series: [{"type":"line","smooth":true,"lineStyle":{"width":2,"color":"#10B981"},"areaStyle":{"color":"rgba(16, 185, 129, 0.15)"},"data":[[0,1e-15],[1,1e-15],[2,1e-15],[3,1e-15],[4,1e-15],[5,1e-15],[6,1e-15],[7,1e-15],[8,1e-15],[9,1e-15],[10,1e-15],[11,1e-15],[12,1e-15],[13,1e-15],[14,1e-15],[15,1e-15],[16,1e-15],[17,1e-15],[18,1e-15],[19,1e-15],[20,1e-15],[21,1e-15],[22,1e-15],[23,1e-15],[24,1e-15],[25,1e-15],[26,1e-15],[27,1e-15],[28,1e-15],[29,1e-15],[30,1e-15],[31,1.7075694419062765e-11],[32,4.829552884162952e-11],[33,8.872371477258839e-11],[34,1.3659855535250214e-10],[35,1.9090188708030315e-10],[36,2.5094673304390855e-10],[37,3.16228766016838e-10],[38,3.8635723073303615e-10],[39,4.610177493146946e-10],[40,5.399502471560389e-10],[41,6.229349027780722e-10],[42,7.097827181807072e-10],[43,8.00328921130525e-10],[44,8.944281909999161e-10],[45,9.919511068991622e-10],[46,1.092781442820017e-9],[47,1.1968140664539827e-9],[48,1.3039532787239967e-9],[49,1.414111481826118e-9],[51,1.6431686725154981e-9],[52,1.7619241475415052e-9],[53,1.8834102281550785e-9],[54,2.0075668643512682e-9],[55,2.1343378023828456e-9],[56,2.2636702008173065e-9],[57,2.395514298859887e-9],[58,2.529823128134704e-9],[59,2.6665522608652696e-9],[60,2.805659588748473e-9],[61,2.94710512787278e-9],[62,3.090850845864289e-9],[63,3.236860508106377e-9],[64,3.3850995404091093e-9],[65,3.535534905932738e-9],[66,3.6881349945175566e-9],[67,3.842869522856984e-9],[68,3.9997094441848966e-9],[69,4.15862686634214e-9],[70,4.319594977248311e-9],[71,4.4825879769398685e-9],[72,4.6475810154489e-9],[73,4.814550135892603e-9],[74,4.983472222224578e-9],[75,5.154324951168185e-9],[76,5.327086747911111e-9],[77,5.501736745191015e-9],[78,5.6782547454456575e-9],[79,5.8566211857385286e-9],[80,6.03681710520369e-9],[81,6.2188241147818155e-9],[82,6.4026243690442004e-9],[83,6.588200539923071e-9],[84,6.775535792185532e-9],[85,6.964613760505073e-9],[86,7.155418527999329e-9],[87,7.3479346061156255e-9],[88,7.542146915757482e-9],[89,7.73804076955525e-9],[90,7.935601855193298e-9],[91,8.134816219714099e-9],[92,8.335670254726837e-9],[93,8.538150682454624e-9],[94,8.742244542560137e-9],[95,8.947939179694723e-9],[96,9.155222231720689e-9],[97,9.364081618560682e-9],[98,9.574505531631862e-9],[99,9.78648242382604e-9],[100,1.0000001e-8]],"name":"浓度"}]
+        };
+        chart.setOption(option);
+        window.addEventListener('resize', function() { chart.resize(); });
+      });
+    </script>
+  
+      </div>
+    
+    <div class="section">
+      <h2>五、长期安全指数评估</h2>
+      <div style="background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%); padding: 30px; border-radius: 12px; margin: 20px 0;">
+        <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+          <div style="text-align: center;">
+            <div style="font-size: 48px; font-weight: bold; color: #10B981;">99.0%</div>
+            <div style="font-size: 16px; color: #6b7280; margin-top: 8px;">长期安全指数</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: bold; color: #10B981;">安全</div>
+            <div style="font-size: 16px; color: #6b7280; margin-top: 8px;">安全等级评定</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: bold; color: #0A2463;">4227 s</div>
+            <div style="font-size: 16px; color: #6b7280; margin-top: 8px;">模型计算耗时</div>
+          </div>
+        </div>
+      </div>
+      <h3>评估指标汇总</h3>
+      <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+        <thead style="background: #0A2463; color: white;">
+          <tr>
+            <th>评估维度</th>
+            <th>指标值</th>
+            <th>标准限值</th>
+            <th>评价结论</th>
+            <th>权重</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>温度安全</td>
+            <td>74.32 °C</td>
+            <td>≤ 100 °C</td>
+            <td style="color: #10B981;">合格</td>
+            <td>30%</td>
+          </tr>
+          <tr style="background: #f9fafb;">
+            <td>力学稳定</td>
+            <td>20.30 MPa</td>
+            <td>≤ 30 MPa</td>
+            <td style="color: #10B981;">合格</td>
+            <td>25%</td>
+          </tr>
+          <tr>
+            <td>核素包容</td>
+            <td>0.010000</td>
+            <td>≤ 1.0e-02</td>
+            <td style="color: #10B981;">合格</td>
+            <td>35%</td>
+          </tr>
+          <tr style="background: #f9fafb;">
+            <td>渗流控制</td>
+            <td>4.00 MPa</td>
+            <td>≤ 10 MPa</td>
+            <td style="color: #10B981;">合格</td>
+            <td>10%</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="background: #fffbeb; border-left: 4px solid #F59E0B; padding: 16px; margin: 20px 0;">
+        <strong>综合结论：</strong>
+        本处置库设计方案在 99.0% 的置信度下满足长期安全要求。
+        建议定期开展复核评估，持续监测处置库演化状态。废物包间距建议保持在
+        6.0 m 以上，缓冲层厚度不低于
+        0.75 m。
+      </div>
+    </div>
+  
+    </div>
+
+    <div class="report-footer">
+      <p>🏢 高放射性废物深地质处置库长期安全模拟与多场耦合评估平台</p>
+      <p>本报告由系统自动生成，仅供内部参考使用。如有疑问，请联系系统管理员。</p>
+      <p>报告版本 v1.0 | 模型编号 THMC-task-1</p>
+    </div>
+
+    <div class="watermark">
+      ── 机密文件 · 未经授权不得转发 ──
+    </div>
+  </div>
+</body>
+</html>

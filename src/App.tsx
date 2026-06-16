@@ -16,6 +16,7 @@ import ReportsPage from './pages/Reports.js';
 import ExportPage from './pages/Export.js';
 import RecommendationsPage from './pages/Recommendations.js';
 import ApprovalsPage from './pages/Approvals.js';
+import PushRecordsPage from './pages/PushRecords.js';
 import SettingsPage from './pages/Settings.js';
 
 const App = () => {
@@ -154,6 +155,17 @@ const App = () => {
               <ProtectedRoute allowedRoles={['engineer', 'director', 'admin']}>
                 <MainLayout>
                   <ApprovalsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/push-records"
+            element={
+              <ProtectedRoute allowedRoles={['director', 'scientist', 'admin']}>
+                <MainLayout>
+                  <PushRecordsPage />
                 </MainLayout>
               </ProtectedRoute>
             }

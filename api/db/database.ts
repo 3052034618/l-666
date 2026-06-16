@@ -13,6 +13,7 @@ import type {
   DashboardStats,
   UserRole,
   TaskStatus,
+  PushRecord,
 } from '../../shared/types.js';
 
 class Database {
@@ -23,6 +24,7 @@ class Database {
   private reports: Map<string, Report> = new Map();
   private paramAdjustments: Map<string, ParamAdjustment> = new Map();
   private recommendations: Map<string, Recommendation> = new Map();
+  private pushRecords: Map<string, PushRecord> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -621,6 +623,33 @@ class Database {
     return newAdjustment;
   }
 
+  getPushRecords(): PushRecord[] {
+    return Array.from(this.pushRecords.values()).sort(
+      (a, b) => new Date(b.pushedAt).getTime() - new Date(a.pushedAt).getTime()
+    );
+  }
+
+  getPushRecordById(id: string): PushRecord | undefined {
+    return this.pushRecords.get(id);
+  }
+
+  createPushRecord(record: Omit<PushRecord, 'id'>): PushRecord {
+    const newRecord: PushRecord = {
+      ...record,
+      id: uuidv4(),
+    };
+    this.pushRecords.set(newRecord.id, newRecord);
+    return newRecord;
+  }
+
+  updatePushRecord(id: string, updates: Partial<PushRecord>): PushRecord | undefined {
+    const record = this.pushRecords.get(id);
+    if (!record) return undefined;
+    const updated = { ...record, ...updates };
+    this.pushRecords.set(id, updated);
+    return updated;
+  }
+
   getDashboardStats(): DashboardStats {
     const tasks = Array.from(this.tasks.values());
     const alerts = Array.from(this.alerts.values());
@@ -686,7 +715,7 @@ class Database {
     };
   }
 
-  private generateTaskResult(params: TaskParams): TaskResult {
+  generateTaskResult(params: TaskParams): TaskResult {
     const time = Array.from({ length: 100 }, (_, i) => Math.round((i * 100) / 99));
     const baseTemp = 25 + params.wastePackageParams.heatOutput / 30;
     const spacingFactor = params.wastePackageParams.spacing / 6.0;

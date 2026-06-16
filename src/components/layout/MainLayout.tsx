@@ -14,6 +14,7 @@ import {
   User,
   PanelLeftClose,
   PanelLeftOpen,
+  Database,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore.js';
@@ -79,6 +80,12 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       icon: <ClipboardCheck size={18} />,
       label: '审批中心',
       roles: ['engineer', 'director', 'admin'],
+    },
+    {
+      key: '/push-records',
+      icon: <Database size={18} />,
+      label: '监管推送',
+      roles: ['director', 'scientist', 'admin'],
     },
     {
       key: '/settings',

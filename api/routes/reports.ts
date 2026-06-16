@@ -520,13 +520,20 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   });
 
   setTimeout(() => {
+    let resultTask = task;
+    if (!task.result) {
+      const generatedResult = db.generateTaskResult(task.params);
+      resultTask = { ...task, result: generatedResult } as SimulationTask;
+    }
+    
     const fileName = `${task.id}-${type}-${uuidv4().substring(0, 8)}.html`;
     const filePath = path.join(reportsDir, fileName);
-    const htmlContent = generateReportHTML(task, type, typeNames[type]);
+    const htmlContent = generateReportHTML(resultTask, type, typeNames[type]);
     fs.writeFileSync(filePath, htmlContent, 'utf-8');
 
     db.updateReport(newReport.id, {
       status: 'ready',
+      filePath: fileName,
       fileUrl: `/api/reports/file/${fileName}`,
       generatedAt: new Date().toISOString(),
     });
@@ -581,7 +588,7 @@ router.get('/file/:filename', (req: AuthRequest, res: Response) => {
 
 router.get('/:id/download', authenticateToken, (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const report = db.getReportById(id);
+  let report = db.getReportById(id);
 
   if (!report) {
     res.status(404).json({ error: '报告不存在' });
@@ -594,11 +601,36 @@ router.get('/:id/download', authenticateToken, (req: AuthRequest, res: Response)
   }
 
   const task = db.getTaskById(report.taskId);
-  const safeTaskName = task ? task.name.replace(/[\\/:*?"<>|]/g, '_') : '报告';
+  if (!task) {
+    res.status(404).json({ error: '关联任务不存在' });
+    return;
+  }
+
+  let resultTask = task;
+  if (!task.result) {
+    const generatedResult = db.generateTaskResult(task.params);
+    resultTask = { ...task, result: generatedResult } as SimulationTask;
+  }
+
+  if (!report.filePath) {
+    const reportFileName = `${report.taskId}-${report.type}-${uuidv4()}.html`;
+    const filePath = path.join(reportsDir, reportFileName);
+    const htmlContent = generateReportHTML(resultTask, report.type as ReportType, report.name);
+    
+    fs.writeFileSync(filePath, htmlContent, 'utf-8');
+    
+    const updated = db.updateReport(report.id, {
+      filePath: reportFileName,
+      fileUrl: `/api/reports/file/${reportFileName}`,
+    });
+    report = updated!;
+  }
+
+  const safeTaskName = task.name.replace(/[\\/:*?"<>|]/g, '_');
   const downloadName = `${safeTaskName}_${report.name}.html`;
 
   res.json({
-    downloadUrl: report.fileUrl,
+    downloadUrl: `/api/reports/file/${report.filePath}`,
     fileName: downloadName,
   });
 });

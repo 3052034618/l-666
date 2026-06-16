@@ -83,6 +83,12 @@ export const reportsAPI = {
   downloadReport: (id: string) => api.get(`/reports/${id}/download`).then((r) => r.data),
 };
 
+export const pushRecordsAPI = {
+  getPushRecords: () => api.get<any[]>('/push-records').then((r) => r.data),
+  getPushRecord: (id: string) => api.get(`/push-records/${id}`).then((r) => r.data),
+  retryPush: (id: string) => api.post(`/push-records/${id}/retry`).then((r) => r.data),
+};
+
 export const dashboardAPI = {
   getStats: () => api.get<DashboardStats>('/dashboard/stats').then((r) => r.data),
 };

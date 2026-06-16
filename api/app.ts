@@ -13,6 +13,7 @@ import usersRouter from './routes/users.js';
 import uploadRouter from './routes/upload.js';
 import recommendationsRouter from './routes/recommendations.js';
 import exportRouter from './routes/export.js';
+import pushRecordsRouter from './routes/pushRecords.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +39,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/export', exportRouter);
+app.use('/api/push-records', pushRecordsRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

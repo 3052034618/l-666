@@ -83,7 +83,30 @@ router.post('/push/:taskId', authenticateToken, requireRoles('director', 'admin'
 
   db.updateTask(taskId, { approvalStatus: 'pushed' });
 
-  res.json({ message: '已成功推送至监管数据库', taskId });
+  const taskReports = db.getReports(taskId).filter((r) => r.status === 'ready');
+  const mainReport = taskReports.find((r) => r.type === 'comprehensive') || taskReports[0];
+
+  const pushRecord = db.createPushRecord({
+    taskId,
+    taskName: task.name,
+    reportId: mainReport?.id,
+    reportName: mainReport?.name,
+    safetyIndex: task.result?.safetyIndex,
+    pushedBy: req.user!.id,
+    pushedByName: req.user!.name,
+    pushedAt: new Date().toISOString(),
+    status: 'pending',
+    remark: '已推送至国家核安全监管数据库',
+  });
+
+  setTimeout(() => {
+    db.updatePushRecord(pushRecord.id, {
+      status: 'received',
+      receivedAt: new Date().toISOString(),
+    });
+  }, 3000);
+
+  res.json({ message: '已成功推送至监管数据库', taskId, pushRecord });
 });
 
 export default router;

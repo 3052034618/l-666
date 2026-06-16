@@ -21,6 +21,7 @@ import {
 } from 'antd';
 import {
   ArrowLeft,
+  ArrowRight,
   PlayCircle,
   StopCircle,
   FileText,
@@ -31,6 +32,8 @@ import {
   Gauge,
   Clock,
   AlertCircle,
+  SlidersHorizontal,
+  BarChart3,
 } from 'lucide-react';
 import { tasksAPI } from '../utils/api.js';
 import { formatDateTime, formatScientific, formatDuration, taskStatusMap } from '../utils/format.js';
@@ -457,14 +460,120 @@ export const TaskDetailPage = () => {
         </TabPane>
 
         <TabPane tab="调参记录" key="adjustments">
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             {adjustments.length > 0 ? (
-              <Table
-                dataSource={adjustments}
-                columns={adjustmentColumns}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
-              />
+              adjustments.map((adj) => (
+                <Card key={adj.id} className="border-0 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                        <SlidersHorizontal size={20} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">参数调整</h4>
+                        <p className="text-sm text-gray-500">
+                          {formatDateTime(adj.createdAt)} · {adj.adjustedByName}
+                        </p>
+                      </div>
+                    </div>
+                    <Tag color="orange">第 {adjustments.indexOf(adj) + 1} 次调整</Tag>
+                  </div>
+                  
+                  {adj.reason && (
+                    <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle size={16} className="text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="text-sm font-medium text-orange-800">调整原因：</span>
+                          <span className="text-sm text-orange-700">{adj.reason}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Row gutter={24}>
+                    <Col span={12}>
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
+                          <ArrowLeft size={14} />
+                          调整前
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">{adj.paramName}</span>
+                            <span className="font-medium text-gray-800">
+                              {typeof adj.oldValue === 'number' 
+                                ? adj.oldValue.toFixed(2) 
+                                : adj.oldValue}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                    <Col span={12}>
+                      <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="text-sm text-green-600 mb-2 flex items-center gap-1">
+                          <ArrowRight size={14} />
+                          调整后
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">{adj.paramName}</span>
+                            <span className="font-medium text-green-700">
+                              {typeof adj.newValue === 'number' 
+                                ? adj.newValue.toFixed(2) 
+                                : adj.newValue}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+                  
+                  {hasResult && adjustments.indexOf(adj) === 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <BarChart3 size={16} className="text-blue-500" />
+                        重算结果变化
+                      </h5>
+                      <Row gutter={16}>
+                        <Col span={6}>
+                          <div className="text-center p-3 bg-blue-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">最高温度</div>
+                            <div className="text-lg font-bold text-blue-600">
+                              {task.result!.maxTemperature.toFixed(1)}°C
+                            </div>
+                          </div>
+                        </Col>
+                        <Col span={6}>
+                          <div className="text-center p-3 bg-purple-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">最大孔隙压力</div>
+                            <div className="text-lg font-bold text-purple-600">
+                              {task.result!.maxPressure.toFixed(2)}MPa
+                            </div>
+                          </div>
+                        </Col>
+                        <Col span={6}>
+                          <div className="text-center p-3 bg-green-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">核素释放率</div>
+                            <div className="text-lg font-bold text-green-600">
+                              {task.result!.nuclideReleaseRate.toFixed(4)}%
+                            </div>
+                          </div>
+                        </Col>
+                        <Col span={6}>
+                          <div className="text-center p-3 bg-orange-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">安全指数</div>
+                            <div className="text-lg font-bold text-orange-600">
+                              {(task.result!.safetyIndex * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  )}
+                </Card>
+              ))
             ) : (
               <div className="flex flex-col items-center justify-center py-20">
                 <Empty description="暂无调参记录" />
