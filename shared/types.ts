@@ -154,6 +154,9 @@ export interface Report {
   filePath?: string;
   createdAt: string;
   generatedAt?: string;
+  version: number;
+  source: string;
+  approvalStatus?: string;
 }
 
 export interface PushRecord {
@@ -169,6 +172,19 @@ export interface PushRecord {
   status: 'pending' | 'received' | 'failed';
   receivedAt?: string;
   remark?: string;
+  batchNo: string;
+  receipt?: {
+    receiptNo: string;
+    receivedBy: string;
+    receivedOrg: string;
+    message: string;
+  };
+  syncLogs: {
+    timestamp: string;
+    action: string;
+    status: string;
+    detail: string;
+  }[];
 }
 
 export interface ParamAdjustment {
@@ -181,6 +197,18 @@ export interface ParamAdjustment {
   adjustedBy: string;
   adjustedByName: string;
   createdAt: string;
+  previousResult?: {
+    maxTemperature: number;
+    maxPressure: number;
+    nuclideReleaseRate: number;
+    safetyIndex: number;
+  };
+  newResult?: {
+    maxTemperature: number;
+    maxPressure: number;
+    nuclideReleaseRate: number;
+    safetyIndex: number;
+  };
 }
 
 export interface Recommendation {

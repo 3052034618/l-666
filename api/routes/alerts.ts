@@ -52,16 +52,24 @@ router.put('/:id/review', authenticateToken, requireRoles('analyst', 'geologist'
       const newParams = { ...task.params };
       let hasChanges = false;
 
+      const previousResult = task.result ? {
+        maxTemperature: task.result.maxTemperature,
+        maxPressure: task.result.maxPressure,
+        nuclideReleaseRate: task.result.nuclideReleaseRate,
+        safetyIndex: task.result.safetyIndex,
+      } : undefined;
+
       if (adjustmentParams.spacing && adjustmentParams.spacing !== task.params.wastePackageParams.spacing) {
         db.createParamAdjustment({
           taskId: alert.taskId,
-          paramName: 'wastePackageParams.spacing',
+          paramName: '废物包间距',
           oldValue: task.params.wastePackageParams.spacing,
           newValue: adjustmentParams.spacing,
           reason: comment || '预警复核调整 - 废物包间距',
           adjustedBy: req.user!.id,
           adjustedByName: req.user!.name || '未知用户',
           createdAt: new Date().toISOString(),
+          previousResult,
         });
         newParams.wastePackageParams = {
           ...newParams.wastePackageParams,
@@ -73,13 +81,14 @@ router.put('/:id/review', authenticateToken, requireRoles('analyst', 'geologist'
       if (adjustmentParams.bufferThickness && adjustmentParams.bufferThickness !== task.params.engineeringBarrierParams.bufferLayer.thickness) {
         db.createParamAdjustment({
           taskId: alert.taskId,
-          paramName: 'engineeringBarrierParams.bufferLayer.thickness',
+          paramName: '缓冲层厚度',
           oldValue: task.params.engineeringBarrierParams.bufferLayer.thickness,
           newValue: adjustmentParams.bufferThickness,
           reason: comment || '预警复核调整 - 缓冲层厚度',
           adjustedBy: req.user!.id,
           adjustedByName: req.user!.name || '未知用户',
           createdAt: new Date().toISOString(),
+          previousResult,
         });
         newParams.engineeringBarrierParams = {
           ...newParams.engineeringBarrierParams,
@@ -112,6 +121,22 @@ router.put('/:id/review', authenticateToken, requireRoles('analyst', 'geologist'
         });
 
         await db.startTaskSimulation(alert.taskId);
+
+        const updatedTask = db.getTaskById(alert.taskId);
+        if (updatedTask?.result) {
+          const adjustments = db.getParamAdjustments(alert.taskId);
+          const recentAdj = adjustments.filter(a => a.previousResult && !a.newResult);
+          for (const adj of recentAdj) {
+            db.updateParamAdjustment(adj.id, {
+              newResult: {
+                maxTemperature: updatedTask.result.maxTemperature,
+                maxPressure: updatedTask.result.maxPressure,
+                nuclideReleaseRate: updatedTask.result.nuclideReleaseRate,
+                safetyIndex: updatedTask.result.safetyIndex,
+              },
+            });
+          }
+        }
       }
     }
   }

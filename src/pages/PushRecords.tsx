@@ -140,6 +140,15 @@ export const PushRecordsPage = () => {
       render: (name: string | undefined) => name || '-',
     },
     {
+      title: '批次号',
+      dataIndex: 'batchNo',
+      key: 'batchNo',
+      width: 180,
+      render: (batchNo: string) => (
+        <span className="font-mono text-xs text-blue-700">{batchNo}</span>
+      ),
+    },
+    {
       title: '安全指数',
       dataIndex: 'safetyIndex',
       key: 'safetyIndex',
@@ -318,12 +327,24 @@ export const PushRecordsPage = () => {
       <Drawer
         title="推送记录详情"
         placement="right"
-        width={520}
+        width={600}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
+        extra={
+          selectedRecord && (selectedRecord.status === 'failed' || selectedRecord.status === 'pending') && user?.role === 'director' ? (
+            <Button
+              type="primary"
+              icon={<RefreshCw size={16} />}
+              loading={retrying[selectedRecord.id]}
+              onClick={() => handleRetry(selectedRecord)}
+            >
+              重新推送
+            </Button>
+          ) : null
+        }
       >
         {selectedRecord && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                 <Send size={24} className="text-blue-600" />
@@ -332,15 +353,18 @@ export const PushRecordsPage = () => {
                 <h3 className="text-lg font-bold text-gray-800">
                   {selectedRecord.taskName}
                 </h3>
-                <Tag color={getStatusConfig(selectedRecord.status).color}>
-                  {getStatusConfig(selectedRecord.status).label}
-                </Tag>
+                <Space>
+                  <Tag color={getStatusConfig(selectedRecord.status).color}>
+                    {getStatusConfig(selectedRecord.status).label}
+                  </Tag>
+                  <Tag color="blue">{selectedRecord.batchNo}</Tag>
+                </Space>
               </div>
             </div>
 
             <Card title="基本信息" size="small" className="border-0 shadow-sm">
-              <Descriptions column={1} size="small" bordered>
-                <Descriptions.Item label="任务名称">
+              <Descriptions column={2} size="small" bordered>
+                <Descriptions.Item label="任务名称" span={2}>
                   <Button
                     type="link"
                     onClick={() => navigate(`/tasks/${selectedRecord.taskId}`)}
@@ -348,6 +372,9 @@ export const PushRecordsPage = () => {
                   >
                     {selectedRecord.taskName}
                   </Button>
+                </Descriptions.Item>
+                <Descriptions.Item label="推送批次号" span={2}>
+                  <span className="font-mono font-medium text-blue-700">{selectedRecord.batchNo}</span>
                 </Descriptions.Item>
                 <Descriptions.Item label="关联报告">
                   {selectedRecord.reportName || '-'}
@@ -357,9 +384,7 @@ export const PushRecordsPage = () => {
                     <span className="font-medium text-blue-600">
                       {(selectedRecord.safetyIndex * 100).toFixed(1)}%
                     </span>
-                  ) : (
-                    '-'
-                  )}
+                  ) : '-'}
                 </Descriptions.Item>
                 <Descriptions.Item label="推送状态">
                   <Tag color={getStatusConfig(selectedRecord.status).color}>
@@ -377,24 +402,68 @@ export const PushRecordsPage = () => {
                     ? formatDateTime(selectedRecord.receivedAt)
                     : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="备注">
+                <Descriptions.Item label="备注" span={2}>
                   {selectedRecord.remark || '-'}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
-            {selectedRecord.status === 'failed' && user?.role === 'director' && (
-              <div className="pt-4 border-t border-gray-100">
-                <Button
-                  type="primary"
-                  block
-                  icon={<RefreshCw size={16} />}
-                  loading={retrying[selectedRecord.id]}
-                  onClick={() => handleRetry(selectedRecord)}
-                >
-                  重新推送
-                </Button>
-              </div>
+            {selectedRecord.receipt && (
+              <Card title="监管接收回执" size="small" className="border-0 shadow-sm">
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle size={18} className="text-green-600" />
+                    <span className="font-medium text-green-800">监管已确认接收</span>
+                  </div>
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="回执编号">
+                      <span className="font-mono text-green-700 font-medium">{selectedRecord.receipt.receiptNo}</span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="接收单位">
+                      {selectedRecord.receipt.receivedOrg}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="接收部门">
+                      {selectedRecord.receipt.receivedBy}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="回执信息">
+                      {selectedRecord.receipt.message}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </div>
+              </Card>
+            )}
+
+            {selectedRecord.syncLogs && selectedRecord.syncLogs.length > 0 && (
+              <Card title="同步日志" size="small" className="border-0 shadow-sm">
+                <div className="space-y-3">
+                  {selectedRecord.syncLogs.map((log, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full ${
+                          log.status === 'success' ? 'bg-green-500' : 
+                          log.status === 'pending' ? 'bg-orange-500' : 'bg-red-500'
+                        }`} />
+                        {idx < selectedRecord.syncLogs.length - 1 && (
+                          <div className="w-0.5 h-8 bg-gray-200" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm text-gray-800">{log.action}</span>
+                          <Tag color={
+                            log.status === 'success' ? 'success' : 
+                            log.status === 'pending' ? 'processing' : 'error'
+                          } className="text-xs">
+                            {log.status === 'success' ? '成功' : log.status === 'pending' ? '进行中' : '失败'}
+                          </Tag>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{log.detail}</p>
+                        <p className="text-xs text-gray-400">{formatDateTime(log.timestamp)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             )}
           </div>
         )}

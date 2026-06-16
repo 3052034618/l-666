@@ -22,6 +22,9 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  Minus,
   PlayCircle,
   StopCircle,
   FileText,
@@ -462,118 +465,205 @@ export const TaskDetailPage = () => {
         <TabPane tab="调参记录" key="adjustments">
           <div className="p-4 space-y-4">
             {adjustments.length > 0 ? (
-              adjustments.map((adj) => (
-                <Card key={adj.id} className="border-0 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                        <SlidersHorizontal size={20} className="text-orange-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-800">参数调整</h4>
-                        <p className="text-sm text-gray-500">
-                          {formatDateTime(adj.createdAt)} · {adj.adjustedByName}
-                        </p>
-                      </div>
-                    </div>
-                    <Tag color="orange">第 {adjustments.indexOf(adj) + 1} 次调整</Tag>
-                  </div>
-                  
-                  {adj.reason && (
-                    <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-100">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle size={16} className="text-orange-500 mt-0.5" />
+              adjustments.map((adj) => {
+                const hasPrevResult = !!adj.previousResult;
+                const hasNewResult = !!adj.newResult;
+                const hasResultComparison = hasPrevResult && hasNewResult;
+                
+                const renderDelta = (oldVal: number, newVal: number, unit: string, lowerIsBetter: boolean) => {
+                  const diff = newVal - oldVal;
+                  const pct = oldVal !== 0 ? ((diff / Math.abs(oldVal)) * 100).toFixed(1) : '0.0';
+                  const isPositive = diff > 0;
+                  const isGood = lowerIsBetter ? !isPositive : isPositive;
+                  const color = isGood ? 'text-green-600' : 'text-red-600';
+                  const Icon = Math.abs(diff) < 0.001 ? Minus : isPositive ? ArrowUp : ArrowDown;
+                  return (
+                    <span className={`text-xs font-medium ${color} flex items-center gap-0.5`}>
+                      <Icon size={12} />
+                      {Math.abs(diff).toFixed(2)}{unit} ({pct}%)
+                    </span>
+                  );
+                };
+                
+                return (
+                  <Card key={adj.id} className="border-0 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                          <SlidersHorizontal size={20} className="text-orange-600" />
+                        </div>
                         <div>
-                          <span className="text-sm font-medium text-orange-800">调整原因：</span>
-                          <span className="text-sm text-orange-700">{adj.reason}</span>
+                          <h4 className="font-semibold text-gray-800">参数调整：{adj.paramName}</h4>
+                          <p className="text-sm text-gray-500">
+                            {formatDateTime(adj.createdAt)} · {adj.adjustedByName}
+                          </p>
                         </div>
                       </div>
+                      <Tag color="orange">第 {adjustments.indexOf(adj) + 1} 次调整</Tag>
                     </div>
-                  )}
-                  
-                  <Row gutter={24}>
-                    <Col span={12}>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
-                          <ArrowLeft size={14} />
-                          调整前
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">{adj.paramName}</span>
-                            <span className="font-medium text-gray-800">
-                              {typeof adj.oldValue === 'number' 
-                                ? adj.oldValue.toFixed(2) 
-                                : adj.oldValue}
-                            </span>
+                    
+                    {adj.reason && (
+                      <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle size={16} className="text-orange-500 mt-0.5" />
+                          <div>
+                            <span className="text-sm font-medium text-orange-800">调整原因：</span>
+                            <span className="text-sm text-orange-700">{adj.reason}</span>
                           </div>
                         </div>
                       </div>
-                    </Col>
-                    <Col span={12}>
-                      <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                        <div className="text-sm text-green-600 mb-2 flex items-center gap-1">
-                          <ArrowRight size={14} />
-                          调整后
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">{adj.paramName}</span>
-                            <span className="font-medium text-green-700">
-                              {typeof adj.newValue === 'number' 
-                                ? adj.newValue.toFixed(2) 
-                                : adj.newValue}
-                            </span>
+                    )}
+                    
+                    <Row gutter={24} className="mb-4">
+                      <Col span={12}>
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
+                            <ArrowLeft size={14} />
+                            调整前
                           </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">{adj.paramName}</span>
+                              <span className="font-medium text-gray-800">
+                                {typeof adj.oldValue === 'number' 
+                                  ? adj.oldValue.toFixed(2) 
+                                  : adj.oldValue}
+                              </span>
+                            </div>
+                          </div>
+                          {hasPrevResult && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                              <div className="text-xs text-gray-400 mb-1">调整前结果</div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">最高温度</span>
+                                <span className="text-gray-700">{adj.previousResult!.maxTemperature.toFixed(1)}°C</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">孔隙压力</span>
+                                <span className="text-gray-700">{adj.previousResult!.maxPressure.toFixed(2)}MPa</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">核素释放率</span>
+                                <span className="text-gray-700">{adj.previousResult!.nuclideReleaseRate.toFixed(4)}%</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">安全指数</span>
+                                <span className="text-gray-700">{(adj.previousResult!.safetyIndex * 100).toFixed(1)}%</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
+                      </Col>
+                      <Col span={12}>
+                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                          <div className="text-sm text-green-600 mb-2 flex items-center gap-1">
+                            <ArrowRight size={14} />
+                            调整后
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">{adj.paramName}</span>
+                              <span className="font-medium text-green-700">
+                                {typeof adj.newValue === 'number' 
+                                  ? adj.newValue.toFixed(2) 
+                                  : adj.newValue}
+                              </span>
+                            </div>
+                          </div>
+                          {hasNewResult && (
+                            <div className="mt-3 pt-3 border-t border-green-200 space-y-1.5">
+                              <div className="text-xs text-gray-400 mb-1">重算结果</div>
+                              <div className="flex justify-between text-xs items-center">
+                                <span className="text-gray-500">最高温度</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-700">{adj.newResult!.maxTemperature.toFixed(1)}°C</span>
+                                  {hasResultComparison && renderDelta(adj.previousResult!.maxTemperature, adj.newResult!.maxTemperature, '°C', true)}
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs items-center">
+                                <span className="text-gray-500">孔隙压力</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-700">{adj.newResult!.maxPressure.toFixed(2)}MPa</span>
+                                  {hasResultComparison && renderDelta(adj.previousResult!.maxPressure, adj.newResult!.maxPressure, 'MPa', true)}
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs items-center">
+                                <span className="text-gray-500">核素释放率</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-700">{adj.newResult!.nuclideReleaseRate.toFixed(4)}%</span>
+                                  {hasResultComparison && renderDelta(adj.previousResult!.nuclideReleaseRate, adj.newResult!.nuclideReleaseRate, '%', true)}
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs items-center">
+                                <span className="text-gray-500">安全指数</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-700">{(adj.newResult!.safetyIndex * 100).toFixed(1)}%</span>
+                                  {hasResultComparison && renderDelta(adj.previousResult!.safetyIndex, adj.newResult!.safetyIndex, '', false)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                    
+                    {hasResultComparison && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <h5 className="text-sm font-medium text-blue-800 mb-3 flex items-center gap-2">
+                          <BarChart3 size={16} className="text-blue-500" />
+                          结果对比总览
+                        </h5>
+                        <Row gutter={16}>
+                          <Col span={6}>
+                            <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                              <div className="text-xs text-gray-500 mb-1">最高温度</div>
+                              <div className="text-sm">
+                                <span className="text-gray-400 line-through">{adj.previousResult!.maxTemperature.toFixed(1)}°C</span>
+                                <ArrowRight size={12} className="inline mx-1 text-gray-400" />
+                                <span className="font-bold text-blue-600">{adj.newResult!.maxTemperature.toFixed(1)}°C</span>
+                              </div>
+                              {renderDelta(adj.previousResult!.maxTemperature, adj.newResult!.maxTemperature, '°C', true)}
+                            </div>
+                          </Col>
+                          <Col span={6}>
+                            <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                              <div className="text-xs text-gray-500 mb-1">孔隙压力</div>
+                              <div className="text-sm">
+                                <span className="text-gray-400 line-through">{adj.previousResult!.maxPressure.toFixed(2)}MPa</span>
+                                <ArrowRight size={12} className="inline mx-1 text-gray-400" />
+                                <span className="font-bold text-purple-600">{adj.newResult!.maxPressure.toFixed(2)}MPa</span>
+                              </div>
+                              {renderDelta(adj.previousResult!.maxPressure, adj.newResult!.maxPressure, 'MPa', true)}
+                            </div>
+                          </Col>
+                          <Col span={6}>
+                            <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                              <div className="text-xs text-gray-500 mb-1">核素释放率</div>
+                              <div className="text-sm">
+                                <span className="text-gray-400 line-through">{adj.previousResult!.nuclideReleaseRate.toFixed(4)}%</span>
+                                <ArrowRight size={12} className="inline mx-1 text-gray-400" />
+                                <span className="font-bold text-green-600">{adj.newResult!.nuclideReleaseRate.toFixed(4)}%</span>
+                              </div>
+                              {renderDelta(adj.previousResult!.nuclideReleaseRate, adj.newResult!.nuclideReleaseRate, '%', true)}
+                            </div>
+                          </Col>
+                          <Col span={6}>
+                            <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                              <div className="text-xs text-gray-500 mb-1">安全指数</div>
+                              <div className="text-sm">
+                                <span className="text-gray-400 line-through">{(adj.previousResult!.safetyIndex * 100).toFixed(1)}%</span>
+                                <ArrowRight size={12} className="inline mx-1 text-gray-400" />
+                                <span className="font-bold text-orange-600">{(adj.newResult!.safetyIndex * 100).toFixed(1)}%</span>
+                              </div>
+                              {renderDelta(adj.previousResult!.safetyIndex, adj.newResult!.safetyIndex, '', false)}
+                            </div>
+                          </Col>
+                        </Row>
                       </div>
-                    </Col>
-                  </Row>
-                  
-                  {hasResult && adjustments.indexOf(adj) === 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                        <BarChart3 size={16} className="text-blue-500" />
-                        重算结果变化
-                      </h5>
-                      <Row gutter={16}>
-                        <Col span={6}>
-                          <div className="text-center p-3 bg-blue-50 rounded-lg">
-                            <div className="text-xs text-gray-500 mb-1">最高温度</div>
-                            <div className="text-lg font-bold text-blue-600">
-                              {task.result!.maxTemperature.toFixed(1)}°C
-                            </div>
-                          </div>
-                        </Col>
-                        <Col span={6}>
-                          <div className="text-center p-3 bg-purple-50 rounded-lg">
-                            <div className="text-xs text-gray-500 mb-1">最大孔隙压力</div>
-                            <div className="text-lg font-bold text-purple-600">
-                              {task.result!.maxPressure.toFixed(2)}MPa
-                            </div>
-                          </div>
-                        </Col>
-                        <Col span={6}>
-                          <div className="text-center p-3 bg-green-50 rounded-lg">
-                            <div className="text-xs text-gray-500 mb-1">核素释放率</div>
-                            <div className="text-lg font-bold text-green-600">
-                              {task.result!.nuclideReleaseRate.toFixed(4)}%
-                            </div>
-                          </div>
-                        </Col>
-                        <Col span={6}>
-                          <div className="text-center p-3 bg-orange-50 rounded-lg">
-                            <div className="text-xs text-gray-500 mb-1">安全指数</div>
-                            <div className="text-lg font-bold text-orange-600">
-                              {(task.result!.safetyIndex * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                        </Col>
-                      </Row>
-                    </div>
-                  )}
-                </Card>
-              ))
+                    )}
+                  </Card>
+                );
+              })
             ) : (
               <div className="flex flex-col items-center justify-center py-20">
                 <Empty description="暂无调参记录" />

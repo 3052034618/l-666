@@ -25,6 +25,11 @@ router.put('/:id', authenticateToken, requireRoles('engineer', 'director', 'admi
     return;
   }
 
+  if (approval.status !== 'pending') {
+    res.status(400).json({ error: '该审批单已处理，请勿重复操作' });
+    return;
+  }
+
   if (approval.level === 1 && !['engineer', 'admin'].includes(req.user!.role)) {
     res.status(403).json({ error: '您没有一级审批权限' });
     return;
@@ -49,13 +54,16 @@ router.put('/:id', authenticateToken, requireRoles('engineer', 'director', 'admi
       if (approval.level === 1) {
         db.updateTask(approval.taskId, { approvalStatus: 'approved_level1' });
         
-        db.createApproval({
-          taskId: approval.taskId,
-          taskName: approval.taskName,
-          level: 2,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        });
+        const existingLevel2 = db.getApprovals({ taskId: approval.taskId, level: 2, status: 'pending' });
+        if (existingLevel2.length === 0) {
+          db.createApproval({
+            taskId: approval.taskId,
+            taskName: approval.taskName,
+            level: 2,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          });
+        }
       } else if (approval.level === 2) {
         db.updateTask(approval.taskId, { approvalStatus: 'approved_level2' });
       }
@@ -86,6 +94,9 @@ router.post('/push/:taskId', authenticateToken, requireRoles('director', 'admin'
   const taskReports = db.getReports(taskId).filter((r) => r.status === 'ready');
   const mainReport = taskReports.find((r) => r.type === 'comprehensive') || taskReports[0];
 
+  const batchNo = `REG-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+  const pushedAt = new Date().toISOString();
+
   const pushRecord = db.createPushRecord({
     taskId,
     taskName: task.name,
@@ -94,15 +105,30 @@ router.post('/push/:taskId', authenticateToken, requireRoles('director', 'admin'
     safetyIndex: task.result?.safetyIndex,
     pushedBy: req.user!.id,
     pushedByName: req.user!.name,
-    pushedAt: new Date().toISOString(),
+    pushedAt,
     status: 'pending',
     remark: '已推送至国家核安全监管数据库',
+    batchNo,
+    syncLogs: [
+      { timestamp: pushedAt, action: '推送', status: 'pending', detail: '数据推送至国家核安全监管数据库' },
+    ],
   });
 
   setTimeout(() => {
+    const receivedAt = new Date().toISOString();
     db.updatePushRecord(pushRecord.id, {
       status: 'received',
-      receivedAt: new Date().toISOString(),
+      receivedAt,
+      receipt: {
+        receiptNo: `RCPT-${Date.now()}`,
+        receivedBy: '国家核安全局监管处',
+        receivedOrg: '国家核安全局',
+        message: '数据接收确认，格式校验通过，已入库归档',
+      },
+      syncLogs: [
+        ...pushRecord.syncLogs,
+        { timestamp: receivedAt, action: '接收确认', status: 'success', detail: '国家核安全局已确认接收，回执号：RCPT-' + Date.now() },
+      ],
     });
   }, 3000);
 

@@ -228,6 +228,9 @@ class Database {
         fileUrl: '/reports/task-1-comprehensive.pdf',
         createdAt: new Date(now.getTime() - 259200000).toISOString(),
         generatedAt: new Date(now.getTime() - 172800000).toISOString(),
+        version: 1,
+        source: '系统自动生成',
+        approvalStatus: 'approved_level2',
       },
       {
         id: 'report-2',
@@ -237,6 +240,9 @@ class Database {
         type: 'temperature',
         status: 'generating',
         createdAt: new Date(now.getTime() - 86400000).toISOString(),
+        version: 1,
+        source: '系统自动生成',
+        approvalStatus: 'pending',
       },
     ];
 
@@ -533,7 +539,7 @@ class Database {
     return updatedAlert;
   }
 
-  getApprovals(params?: { level?: number; status?: string }): Approval[] {
+  getApprovals(params?: { level?: number; status?: string; taskId?: string }): Approval[] {
     let approvals = Array.from(this.approvals.values());
 
     if (params?.level) {
@@ -542,6 +548,10 @@ class Database {
 
     if (params?.status) {
       approvals = approvals.filter((a) => a.status === params.status);
+    }
+
+    if (params?.taskId) {
+      approvals = approvals.filter((a) => a.taskId === params.taskId);
     }
 
     return approvals;
@@ -621,6 +631,14 @@ class Database {
     };
     this.paramAdjustments.set(newAdjustment.id, newAdjustment);
     return newAdjustment;
+  }
+
+  updateParamAdjustment(id: string, updates: Partial<ParamAdjustment>): ParamAdjustment | undefined {
+    const adj = this.paramAdjustments.get(id);
+    if (!adj) return undefined;
+    const updated = { ...adj, ...updates };
+    this.paramAdjustments.set(id, updated);
+    return updated;
   }
 
   getPushRecords(): PushRecord[] {

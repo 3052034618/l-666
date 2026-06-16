@@ -248,6 +248,40 @@ export const ReportsPage = () => {
       },
     },
     {
+      title: '版本',
+      dataIndex: 'version',
+      key: 'version',
+      width: 70,
+      render: (version: number) => (
+        <Tag color="blue">V{version}</Tag>
+      ),
+    },
+    {
+      title: '来源',
+      dataIndex: 'source',
+      key: 'source',
+      width: 120,
+      render: (source: string) => source || '-',
+    },
+    {
+      title: '审批状态',
+      dataIndex: 'approvalStatus',
+      key: 'approvalStatus',
+      width: 120,
+      render: (status: string | undefined) => {
+        if (!status) return '-';
+        const map: Record<string, { label: string; color: string }> = {
+          pending: { label: '待审批', color: 'default' },
+          approved_level1: { label: '一级通过', color: 'processing' },
+          approved_level2: { label: '二级通过', color: 'success' },
+          rejected: { label: '已驳回', color: 'error' },
+          pushed: { label: '已推送', color: 'purple' },
+        };
+        const config = map[status] || { label: status, color: 'default' };
+        return <Tag color={config.color}>{config.label}</Tag>;
+      },
+    },
+    {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -458,10 +492,32 @@ export const ReportsPage = () => {
                 <Descriptions.Item label="报告编号">
                   {selectedReport.id}
                 </Descriptions.Item>
+                <Descriptions.Item label="版本号">
+                  <Tag color="blue">V{selectedReport.version || 1}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="生成来源">
+                  {selectedReport.source || '系统自动生成'}
+                </Descriptions.Item>
+                <Descriptions.Item label="审批状态">
+                  {selectedReport.approvalStatus ? (
+                    <Tag color={
+                      selectedReport.approvalStatus === 'pushed' ? 'purple' :
+                      selectedReport.approvalStatus === 'approved_level2' ? 'success' :
+                      selectedReport.approvalStatus === 'approved_level1' ? 'processing' :
+                      selectedReport.approvalStatus === 'rejected' ? 'error' : 'default'
+                    }>
+                      {selectedReport.approvalStatus === 'pending' ? '待审批' :
+                       selectedReport.approvalStatus === 'approved_level1' ? '一级审批通过' :
+                       selectedReport.approvalStatus === 'approved_level2' ? '二级审批通过' :
+                       selectedReport.approvalStatus === 'rejected' ? '已驳回' :
+                       selectedReport.approvalStatus === 'pushed' ? '已推送监管' : selectedReport.approvalStatus}
+                    </Tag>
+                  ) : '-'}
+                </Descriptions.Item>
                 <Descriptions.Item label="创建时间">
                   {formatDateTime(selectedReport.createdAt)}
                 </Descriptions.Item>
-                <Descriptions.Item label="生成完成时间">
+                <Descriptions.Item label="生成完成时间" span={2}>
                   {selectedReport.generatedAt ? formatDateTime(selectedReport.generatedAt) : '-'}
                 </Descriptions.Item>
               </Descriptions>

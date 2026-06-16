@@ -510,6 +510,11 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     nuclide: '核素迁移分析报告',
   };
 
+  const existingReports = db.getReports(taskId).filter((r) => r.type === type);
+  const nextVersion = existingReports.length > 0
+    ? Math.max(...existingReports.map((r) => r.version || 1)) + 1
+    : 1;
+
   const newReport = db.createReport({
     taskId,
     taskName: task.name,
@@ -517,6 +522,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     type,
     status: 'generating',
     createdAt: new Date().toISOString(),
+    version: nextVersion,
+    source: req.user!.role === 'admin' ? '管理员手动生成' : '系统自动生成',
+    approvalStatus: task.approvalStatus,
   });
 
   setTimeout(() => {
