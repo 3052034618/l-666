@@ -21,6 +21,7 @@ import {
   Spin,
   Progress,
   Divider,
+  Collapse,
 } from 'antd';
 import {
   FileText,
@@ -39,6 +40,8 @@ import {
   Clock,
   Calendar,
   User,
+  ChevronDown,
+  GitCompare,
 } from 'lucide-react';
 import { reportsAPI, tasksAPI } from '../utils/api.js';
 import { formatDateTime, formatFileSize } from '../utils/format.js';
@@ -59,6 +62,10 @@ export const ReportsPage = () => {
   const [createForm] = Form.useForm();
   const [tasks, setTasks] = useState<SimulationTask[]>([]);
   const [generating, setGenerating] = useState<Record<string, boolean>>({});
+  const [viewMode, setViewMode] = useState<'table' | 'grouped'>('grouped');
+  const [compareModalVisible, setCompareModalVisible] = useState(false);
+  const [compareReports, setCompareReports] = useState<[Report, Report] | null>(null);
+  const [selectedForCompare, setSelectedForCompare] = useState<Report[]>([]);
   const [filters, setFilters] = useState({
     type: '',
     status: '',
@@ -183,6 +190,91 @@ export const ReportsPage = () => {
     } catch (error: any) {
       message.error({ content: error.response?.data?.error || '下载失败', key: 'download' });
     }
+  };
+
+  const handleSelectForCompare = (report: Report) => {
+    setSelectedForCompare((prev) => {
+      const exists = prev.some((r) => r.id === report.id);
+      if (exists) {
+        return prev.filter((r) => r.id !== report.id);
+      }
+      if (prev.length >= 2) {
+        message.warning('最多选择2份报告进行对比');
+        return prev;
+      }
+      const next = [...prev, report];
+      if (next.length === 2) {
+        setCompareReports([next[0], next[1]]);
+        setCompareModalVisible(true);
+      }
+      return next;
+    });
+  };
+
+  const groupedReports = reports.reduce<Record<string, Report[]>>((acc, rpt) => {
+    const key = rpt.taskId;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(rpt);
+    return acc;
+  }, {});
+
+  const renderGroupedReports = () => {
+    const groups = Object.entries(groupedReports);
+    if (groups.length === 0) {
+      return <Empty description="暂无报告" />;
+    }
+
+    return (
+      <Collapse
+        defaultActiveKey={groups.map(([key]) => key)}
+        items={groups.map(([taskId, taskReports]) => {
+          const taskName = taskReports[0].taskName;
+          const sorted = [...taskReports].sort((a, b) => (b.version || 1) - (a.version || 1));
+          const readyCount = sorted.filter((r) => r.status === 'ready').length;
+
+          return {
+            key: taskId,
+            label: (
+              <div className="flex items-center justify-between w-full pr-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="link"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${taskId}`); }}
+                    className="p-0 h-auto font-semibold text-base"
+                  >
+                    {taskName}
+                  </Button>
+                  <Tag color="blue">{sorted.length} 个版本</Tag>
+                  <Tag color="green">{readyCount} 已就绪</Tag>
+                </div>
+                <Space onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="small"
+                    icon={<Plus size={14} />}
+                    onClick={() => {
+                      createForm.setFieldsValue({ taskId });
+                      setCreateModalVisible(true);
+                    }}
+                  >
+                    新版本
+                  </Button>
+                </Space>
+              </div>
+            ),
+            children: (
+              <Table
+                dataSource={sorted}
+                columns={columns}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                scroll={{ x: 1000 }}
+              />
+            ),
+          };
+        })}
+      />
+    );
   };
 
   const stats = {
@@ -318,6 +410,14 @@ export const ReportsPage = () => {
           >
             下载
           </Button>
+          <Button
+            size="small"
+            icon={<GitCompare size={14} />}
+            onClick={() => handleSelectForCompare(record)}
+            type={selectedForCompare.some((s) => s.id === record.id) ? 'primary' : 'default'}
+          >
+            对比
+          </Button>
         </Space>
       ),
     },
@@ -425,20 +525,49 @@ export const ReportsPage = () => {
           <Button onClick={() => setFilters({ type: '', status: '', keyword: '' })}>
             重置
           </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {selectedForCompare.length === 2 && (
+              <Button
+                type="primary"
+                icon={<GitCompare size={14} />}
+                onClick={() => {
+                  setCompareReports([selectedForCompare[0], selectedForCompare[1]]);
+                  setCompareModalVisible(true);
+                }}
+              >
+                对比已选报告
+              </Button>
+            )}
+            {selectedForCompare.length > 0 && (
+              <Button onClick={() => setSelectedForCompare([])}>
+                清除选择 ({selectedForCompare.length}/2)
+              </Button>
+            )}
+            <Select
+              value={viewMode}
+              onChange={setViewMode}
+              className="w-32"
+            >
+              <Option value="grouped">按任务分组</Option>
+              <Option value="table">列表视图</Option>
+            </Select>
+          </div>
         </div>
 
-        <Table
-          dataSource={reports}
-          columns={columns}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 份报告`,
-          }}
-          scroll={{ x: 1000 }}
-        />
+        {viewMode === 'grouped' ? renderGroupedReports() : (
+          <Table
+            dataSource={reports}
+            columns={columns}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `共 ${total} 份报告`,
+            }}
+            scroll={{ x: 1000 }}
+          />
+        )}
       </Card>
 
       <Drawer
@@ -701,6 +830,71 @@ export const ReportsPage = () => {
             </Button>
           </div>
         </Form>
+      </Modal>
+
+      <Modal
+        title="报告版本对比"
+        open={compareModalVisible}
+        onCancel={() => { setCompareModalVisible(false); setSelectedForCompare([]); }}
+        width={900}
+        footer={null}
+      >
+        {compareReports && (
+          <div className="space-y-4">
+            <Row gutter={24}>
+              <Col span={12}>
+                <Card size="small" title={<Space><Tag color="blue">V{compareReports[0].version || 1}</Tag>{compareReports[0].name}</Space>} className="border-0 shadow-sm">
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="版本">V{compareReports[0].version || 1}</Descriptions.Item>
+                    <Descriptions.Item label="生成来源">{compareReports[0].source || '系统自动生成'}</Descriptions.Item>
+                    <Descriptions.Item label="审批状态">
+                      {compareReports[0].approvalStatus ? (
+                        <Tag color={compareReports[0].approvalStatus === 'pushed' ? 'purple' : compareReports[0].approvalStatus === 'approved_level2' ? 'success' : 'default'}>
+                          {compareReports[0].approvalStatus === 'pending' ? '待审批' : compareReports[0].approvalStatus === 'approved_level1' ? '一级通过' : compareReports[0].approvalStatus === 'approved_level2' ? '二级通过' : compareReports[0].approvalStatus === 'pushed' ? '已推送' : compareReports[0].approvalStatus}
+                        </Tag>
+                      ) : '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="生成时间">{compareReports[0].generatedAt ? formatDateTime(compareReports[0].generatedAt) : '-'}</Descriptions.Item>
+                    <Descriptions.Item label="状态">
+                      <Tag color={compareReports[0].status === 'ready' ? 'success' : compareReports[0].status === 'generating' ? 'processing' : 'error'}>
+                        {compareReports[0].status === 'ready' ? '已就绪' : compareReports[0].status === 'generating' ? '生成中' : '失败'}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              </Col>
+              <Col span={12}>
+                <Card size="small" title={<Space><Tag color="blue">V{compareReports[1].version || 1}</Tag>{compareReports[1].name}</Space>} className="border-0 shadow-sm">
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="版本">V{compareReports[1].version || 1}</Descriptions.Item>
+                    <Descriptions.Item label="生成来源">{compareReports[1].source || '系统自动生成'}</Descriptions.Item>
+                    <Descriptions.Item label="审批状态">
+                      {compareReports[1].approvalStatus ? (
+                        <Tag color={compareReports[1].approvalStatus === 'pushed' ? 'purple' : compareReports[1].approvalStatus === 'approved_level2' ? 'success' : 'default'}>
+                          {compareReports[1].approvalStatus === 'pending' ? '待审批' : compareReports[1].approvalStatus === 'approved_level1' ? '一级通过' : compareReports[1].approvalStatus === 'approved_level2' ? '二级通过' : compareReports[1].approvalStatus === 'pushed' ? '已推送' : compareReports[1].approvalStatus}
+                        </Tag>
+                      ) : '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="生成时间">{compareReports[1].generatedAt ? formatDateTime(compareReports[1].generatedAt) : '-'}</Descriptions.Item>
+                    <Descriptions.Item label="状态">
+                      <Tag color={compareReports[1].status === 'ready' ? 'success' : compareReports[1].status === 'generating' ? 'processing' : 'error'}>
+                        {compareReports[1].status === 'ready' ? '已就绪' : compareReports[1].status === 'generating' ? '生成中' : '失败'}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              </Col>
+            </Row>
+            <div className="flex justify-center gap-4 mt-4">
+              <Button icon={<Download size={14} />} onClick={() => handleDownload(compareReports[0])} disabled={compareReports[0].status !== 'ready'}>
+                下载 V{compareReports[0].version || 1}
+              </Button>
+              <Button icon={<Download size={14} />} onClick={() => handleDownload(compareReports[1])} disabled={compareReports[1].status !== 'ready'}>
+                下载 V{compareReports[1].version || 1}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

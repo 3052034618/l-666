@@ -635,7 +635,8 @@ router.get('/:id/download', authenticateToken, (req: AuthRequest, res: Response)
   }
 
   const safeTaskName = task.name.replace(/[\\/:*?"<>|]/g, '_');
-  const downloadName = `${safeTaskName}_${report.name}.html`;
+  const versionStr = report.version ? `_V${report.version}` : '';
+  const downloadName = `${safeTaskName}_${report.name}${versionStr}.html`;
 
   res.json({
     downloadUrl: `/api/reports/file/${report.filePath}`,

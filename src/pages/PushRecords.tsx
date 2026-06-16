@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -51,12 +51,10 @@ export const PushRecordsPage = () => {
     status: '',
     keyword: '',
   });
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const TIMEOUT_SECONDS = 15;
 
-  useEffect(() => {
-    fetchRecords();
-  }, [filters]);
-
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     try {
       setLoading(true);
       const data = await pushRecordsAPI.getPushRecords();
@@ -75,11 +73,46 @@ export const PushRecordsPage = () => {
       }
       
       setRecords(filtered);
+
+      if (drawerVisible && selectedRecord) {
+        const updated = filtered.find((r: PushRecord) => r.id === selectedRecord.id);
+        if (updated) {
+          setSelectedRecord(updated);
+        }
+      }
     } catch (error: any) {
       message.error(error.response?.data?.error || '获取推送记录失败');
     } finally {
       setLoading(false);
     }
+  }, [filters, drawerVisible, selectedRecord]);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [filters]);
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  const startPolling = () => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    let count = 0;
+    pollingRef.current = setInterval(() => {
+      fetchRecords();
+      count++;
+      if (count >= 8) {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      }
+    }, 2000);
+  };
+
+  const isTimeout = (record: PushRecord): boolean => {
+    if (record.status !== 'pending') return false;
+    const elapsed = (Date.now() - new Date(record.pushedAt).getTime()) / 1000;
+    return elapsed > TIMEOUT_SECONDS;
   };
 
   const handleViewDetail = (record: PushRecord) => {
@@ -91,8 +124,9 @@ export const PushRecordsPage = () => {
     try {
       setRetrying((prev) => ({ ...prev, [record.id]: true }));
       await pushRecordsAPI.retryPush(record.id);
-      message.success('重新推送成功');
-      fetchRecords();
+      message.success('重新推送成功，新批次号已生成');
+      await fetchRecords();
+      startPolling();
     } catch (error: any) {
       message.error(error.response?.data?.error || '重新推送失败');
     } finally {
@@ -167,14 +201,20 @@ export const PushRecordsPage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: PushRecord['status']) => {
+      render: (status: PushRecord['status'], record: PushRecord) => {
         const config = getStatusConfig(status);
         const Icon = config.icon;
+        const timeout = isTimeout(record);
         return (
-          <Tag color={config.color} className="flex items-center gap-1 w-fit">
-            <Icon size={12} />
-            {config.label}
-          </Tag>
+          <Space direction="vertical" size={0}>
+            <Tag color={config.color} className="flex items-center gap-1 w-fit">
+              <Icon size={12} />
+              {config.label}
+            </Tag>
+            {timeout && (
+              <Tag color="error" className="text-xs">超时</Tag>
+            )}
+          </Space>
         );
       },
     },
@@ -212,7 +252,7 @@ export const PushRecordsPage = () => {
           >
             详情
           </Button>
-          {record.status === 'failed' && user?.role === 'director' && (
+          {(record.status === 'failed' || isTimeout(record)) && user?.role === 'director' && (
             <Button
               size="small"
               icon={<RefreshCw size={14} />}
@@ -331,7 +371,7 @@ export const PushRecordsPage = () => {
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
         extra={
-          selectedRecord && (selectedRecord.status === 'failed' || selectedRecord.status === 'pending') && user?.role === 'director' ? (
+          selectedRecord && (selectedRecord.status === 'failed' || selectedRecord.status === 'pending' || isTimeout(selectedRecord)) && user?.role === 'director' ? (
             <Button
               type="primary"
               icon={<RefreshCw size={16} />}
@@ -407,6 +447,18 @@ export const PushRecordsPage = () => {
                 </Descriptions.Item>
               </Descriptions>
             </Card>
+
+            {isTimeout(selectedRecord) && (
+              <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="text-red-500" />
+                  <span className="font-medium text-red-700">推送超时</span>
+                </div>
+                <p className="text-sm text-red-600 mt-1">
+                  推送已超过{TIMEOUT_SECONDS}秒未收到确认，可能存在网络异常。建议重新推送。
+                </p>
+              </div>
+            )}
 
             {selectedRecord.receipt && (
               <Card title="监管接收回执" size="small" className="border-0 shadow-sm">

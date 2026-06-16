@@ -18,6 +18,7 @@ import {
   Empty,
   Spin,
   message,
+  Timeline,
 } from 'antd';
 import {
   ArrowLeft,
@@ -37,6 +38,10 @@ import {
   AlertCircle,
   SlidersHorizontal,
   BarChart3,
+  ClipboardCheck,
+  Database,
+  GitBranch,
+  ExternalLink,
 } from 'lucide-react';
 import { tasksAPI } from '../utils/api.js';
 import { formatDateTime, formatScientific, formatDuration, taskStatusMap } from '../utils/format.js';
@@ -55,6 +60,16 @@ export const TaskDetailPage = () => {
   const [task, setTask] = useState<SimulationTask | null>(null);
   const [loading, setLoading] = useState(true);
   const [adjustments, setAdjustments] = useState<ParamAdjustment[]>([]);
+  const [timelineData, setTimelineData] = useState<Array<{
+    timestamp: string;
+    action: string;
+    type: string;
+    detail: string;
+    linkId?: string;
+    linkType?: string;
+    status?: string;
+    operator?: string;
+  }>>([]);
 
   useEffect(() => {
     if (id) {
@@ -65,12 +80,14 @@ export const TaskDetailPage = () => {
   const fetchTaskData = async (taskId: string) => {
     try {
       setLoading(true);
-      const [taskData, adjustmentsData] = await Promise.all([
+      const [taskData, adjustmentsData, timelineResult] = await Promise.all([
         tasksAPI.getTask(taskId),
         tasksAPI.getAdjustments(taskId),
+        tasksAPI.getTaskTimeline(taskId).catch(() => []),
       ]);
       setTask(taskData);
       setAdjustments(adjustmentsData);
+      setTimelineData(timelineResult as any[]);
     } catch (error: any) {
       message.error(error.response?.data?.error || '获取任务详情失败');
     } finally {
@@ -668,6 +685,99 @@ export const TaskDetailPage = () => {
               <div className="flex flex-col items-center justify-center py-20">
                 <Empty description="暂无调参记录" />
               </div>
+            )}
+          </div>
+        </TabPane>
+
+        <TabPane tab="追溯时间线" key="timeline">
+          <div className="p-4">
+            {timelineData.length > 0 ? (
+              <Timeline
+                items={timelineData.map((item, idx) => {
+                  const colorMap: Record<string, string> = {
+                    task: 'blue',
+                    adjustment: 'orange',
+                    approval: item.status === 'approved' ? 'green' : item.status === 'rejected' ? 'red' : 'purple',
+                    report: 'cyan',
+                    push: item.status === 'received' ? 'green' : item.status === 'failed' ? 'red' : 'blue',
+                  };
+                  
+                  const iconMap: Record<string, React.ReactNode> = {
+                    task: <PlayCircle size={14} />,
+                    adjustment: <SlidersHorizontal size={14} />,
+                    approval: <ClipboardCheck size={14} />,
+                    report: <FileText size={14} />,
+                    push: <Database size={14} />,
+                  };
+
+                  const handleLinkClick = () => {
+                    if (item.linkType === 'report') {
+                      navigate(`/reports`);
+                    } else if (item.linkType === 'push') {
+                      navigate(`/push-records`);
+                    } else if (item.linkType === 'approval') {
+                      navigate(`/approvals`);
+                    }
+                  };
+
+                  return {
+                    color: colorMap[item.type] || 'gray',
+                    dot: iconMap[item.type] ? (
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        item.type === 'task' ? 'bg-blue-100 text-blue-600' :
+                        item.type === 'adjustment' ? 'bg-orange-100 text-orange-600' :
+                        item.type === 'approval' ? 'bg-purple-100 text-purple-600' :
+                        item.type === 'report' ? 'bg-cyan-100 text-cyan-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {iconMap[item.type]}
+                      </div>
+                    ) : undefined,
+                    children: (
+                      <div key={idx} className="pb-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800">{item.action}</span>
+                            {item.status && (
+                              <Tag color={
+                                item.status === 'approved' || item.status === 'received' || item.status === 'ready' ? 'success' :
+                                item.status === 'rejected' || item.status === 'failed' ? 'error' :
+                                item.status === 'pending' || item.status === 'generating' ? 'processing' : 'default'
+                              } className="text-xs">
+                                {item.status === 'approved' ? '已通过' :
+                                 item.status === 'rejected' ? '已驳回' :
+                                 item.status === 'pending' ? '待处理' :
+                                 item.status === 'received' ? '已接收' :
+                                 item.status === 'ready' ? '已就绪' :
+                                 item.status === 'generating' ? '生成中' :
+                                 item.status}
+                              </Tag>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400">{formatDateTime(item.timestamp)}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{item.detail}</p>
+                        {item.operator && (
+                          <p className="text-xs text-gray-400 mt-1">操作人：{item.operator}</p>
+                        )}
+                        {item.linkId && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={<ExternalLink size={12} />}
+                            onClick={handleLinkClick}
+                            className="p-0 h-auto mt-1 text-xs"
+                          >
+                            查看详情
+                          </Button>
+                        )}
+                      </div>
+                    ),
+                  };
+                })}
+              />
+            ) : (
+              <Empty description="暂无追溯记录" />
             )}
           </div>
         </TabPane>

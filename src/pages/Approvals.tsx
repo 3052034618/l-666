@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Table,
@@ -66,6 +66,32 @@ export const ApprovalsPage = () => {
     status: '',
     keyword: '',
   });
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+    let count = 0;
+    pollingRef.current = setInterval(() => {
+      count++;
+      fetchData();
+      if (count >= 3) {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      }
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -126,10 +152,22 @@ export const ApprovalsPage = () => {
         status: processType,
         comment: values.comment,
       });
-      
-      message.success(processType === 'approve' ? '审批通过' : '审批已驳回');
+
+      if (processType === 'approve') {
+        if (selectedApproval.level === 1) {
+          message.success('一级审批已通过，二级审批已自动创建');
+        } else {
+          message.success('二级审批已通过，可推送至监管数据库');
+        }
+      } else {
+        message.success('审批已驳回');
+      }
+
       setProcessModalVisible(false);
+      setDrawerVisible(false);
+      setSelectedApproval(null);
       fetchData();
+      startPolling();
     } catch (error: any) {
       message.error(error.response?.data?.error || '操作失败');
     }

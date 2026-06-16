@@ -56,6 +56,7 @@ export const tasksAPI = {
   getMonitorData: (id: string) =>
     api.get(`/tasks/${id}/monitor`).then((r) => r.data),
   getAdjustments: (id: string) => api.get(`/tasks/${id}/adjustments`).then((r) => r.data),
+  getTaskTimeline: (id: string) => api.get(`/tasks/${id}/timeline`).then((r) => r.data),
 };
 
 export const alertsAPI = {
