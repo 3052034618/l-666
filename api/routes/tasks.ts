@@ -60,6 +60,8 @@ router.post('/', authenticateToken, requireRoles('analyst', 'admin'), (req: Auth
     message: '任务创建成功，等待数据校验',
   });
 
+  db.startTaskSimulation(newTask.id);
+
   res.status(201).json(newTask);
 });
 

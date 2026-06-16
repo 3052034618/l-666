@@ -1,0 +1,14 @@
+{
+  "radioactivity": 1.5e15,
+  "heatOutput": 2200,
+  "spacing": 8.5,
+  "count": 32,
+  "wasteType": "UO2",
+  "material": "硼硅酸盐玻璃",
+  "bufferThickness": 0.9,
+  "permeability": 1.5e-13,
+  "bufferMaterial": "膨润土",
+  "backfillMaterial": "膨润土/砂混合物",
+  "backfillRatio": "60:40",
+  "compactness": 0.96
+}

@@ -64,8 +64,12 @@ export const UploadPage = () => {
         });
         
         setUploadProgress(100);
-        setCurrentStep(1);
-        message.success('文件上传成功');
+        if (result.validation.valid) {
+          setCurrentStep(1);
+          message.success('文件上传成功，参数校验通过');
+        } else {
+          message.warning(`参数校验未通过，发现 ${result.validation.errors.length} 个错误，请修正后重试`);
+        }
       } catch (error: any) {
         message.error(error.response?.data?.error || '上传失败');
       } finally {

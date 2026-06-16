@@ -686,6 +686,148 @@ class Database {
     };
   }
 
+  private generateTaskResult(params: TaskParams): TaskResult {
+    const time = Array.from({ length: 100 }, (_, i) => Math.round((i * 100) / 99));
+    const baseTemp = 25 + params.wastePackageParams.heatOutput / 30;
+    const spacingFactor = params.wastePackageParams.spacing / 6.0;
+    const bufferFactor = params.engineeringBarrierParams.bufferLayer.thickness / 0.75;
+
+    const temperatureValues = time.map((t) => {
+      const peakFactor = Math.min(1, t / 20);
+      const decayFactor = Math.exp(-Math.max(0, t - 50) / 100);
+      return baseTemp * peakFactor * (0.9 + 0.1 * Math.sin(t / 10)) * decayFactor / spacingFactor;
+    });
+
+    const pressureValues = time.map((t) => {
+      const peakPressure = 2.5 + 0.5 * Math.sin(t / 15);
+      const decayFactor = Math.exp(-Math.max(0, t - 30) / 200);
+      return peakPressure * decayFactor + 1.0;
+    });
+
+    const concentrationValues = time.map((t) => {
+      const baseConc = 1e-8 / bufferFactor;
+      const delayFactor = t > 30 ? Math.pow((t - 30) / 70, 1.5) : 0;
+      return Math.min(1e-5, baseConc * delayFactor + 1e-15);
+    });
+
+    const strain = Array.from({ length: 50 }, (_, i) => i * 0.001);
+    const stress = strain.map((s) => {
+      const elasticStiffness = 25000;
+      const yieldStrain = 0.012;
+      if (s <= yieldStrain) {
+        return elasticStiffness * s / 1000;
+      } else {
+        const plasticPart = Math.min(20, (s - yieldStrain) * 800000 / 1000);
+        return elasticStiffness * yieldStrain / 1000 + plasticPart;
+      }
+    });
+
+    const maxTemp = Math.max(...temperatureValues);
+    const safetyIndex = Math.max(0.5, 1.0 - (maxTemp - 80) / 80 - params.engineeringBarrierParams.bufferLayer.permeability * 1e10 / 2 + (bufferFactor - 1) * 0.05);
+
+    return {
+      temperatureField: { time, values: temperatureValues, units: '°C' },
+      porePressure: { time, values: pressureValues, units: 'MPa' },
+      nuclideConcentration: { time, values: concentrationValues, units: 'mol/L' },
+      stressStrain: {
+        strain,
+        stress,
+        maxStress: Math.max(...stress),
+        maxStrain: strain[strain.length - 1],
+      },
+      safetyIndex: Math.min(0.99, Math.max(0.5, safetyIndex)),
+      nuclideReleaseRate: concentrationValues[concentrationValues.length - 1] * 1e6,
+      maxTemperature: maxTemp,
+      maxPressure: Math.max(...pressureValues),
+      computationTime: 3000 + Math.floor(Math.random() * 4000),
+    };
+  }
+
+  async startTaskSimulation(taskId: string): Promise<void> {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    
+    const updateAndLog = (status: TaskStatus, progress: number, message: string, level: 'info' | 'warning' | 'error' = 'info') => {
+      this.updateTask(taskId, { status, progress, updatedAt: new Date().toISOString() });
+      this.addTaskLog(taskId, { level, message });
+    };
+
+    const task = this.getTaskById(taskId);
+    if (!task) return;
+
+    const failChance = Math.random();
+    const shouldFailAt = failChance < 0.1 ? Math.floor(Math.random() * 4) : -1;
+
+    try {
+      await delay(800);
+      updateAndLog('parsing', 10, '[1/5] 参数解析中：读取地质模型网格数据...');
+      await delay(1200);
+      updateAndLog('parsing', 20, '[1/5] 参数解析完成：废物包参数校验通过');
+
+      if (shouldFailAt === 0) {
+        throw new Error('地质模型格式错误：无法识别的网格单元类型');
+      }
+
+      await delay(800);
+      updateAndLog('meshing', 30, '[2/5] 自适应网格生成中：初始化四面体剖分...');
+      await delay(1200);
+      updateAndLog('meshing', 40, '[2/5] 自适应网格生成中：工程屏障区域加密...');
+      await delay(1000);
+      updateAndLog('meshing', 50, '[2/5] 网格生成完成：共 ' + (50000 + Math.floor(Math.random() * 100000)) + ' 个单元');
+
+      if (shouldFailAt === 1) {
+        throw new Error('网格质量不达标：雅可比行列式小于阈值');
+      }
+
+      await delay(800);
+      updateAndLog('computing', 55, '[3/5] 热-水-力-化学耦合计算中：温度场求解...');
+      await delay(1500);
+      updateAndLog('computing', 70, '[3/5] 耦合计算中：渗流-应力迭代...');
+      await delay(1500);
+      updateAndLog('computing', 85, '[3/5] 耦合计算中：核素迁移方程求解...');
+
+      if (shouldFailAt === 2) {
+        throw new Error('数值发散：耦合方程组迭代未收敛');
+      }
+
+      const result = this.generateTaskResult(task.params);
+      
+      await delay(800);
+      updateAndLog('evaluating', 90, '[4/5] 安全评估中：计算安全指数...');
+      
+      if (result.maxTemperature > 100) {
+        this.addTaskLog(taskId, { level: 'warning', message: `警告：最高温度 ${result.maxTemperature.toFixed(1)}°C 超过设计阈值 100°C` });
+      }
+      
+      await delay(1200);
+      this.updateTask(taskId, { 
+        status: 'completed', 
+        progress: 100, 
+        result,
+        updatedAt: new Date().toISOString(),
+      });
+      this.addTaskLog(taskId, { level: 'info', message: `[5/5] 模拟完成：安全指数 ${result.safetyIndex.toFixed(4)}，计算耗时 ${result.computationTime}s` });
+
+      this.createApproval({
+        taskId,
+        taskName: task.name,
+        level: 1,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      });
+
+    } catch (error: any) {
+      await delay(500);
+      this.updateTask(taskId, { 
+        status: 'rollback', 
+        progress: 0,
+        updatedAt: new Date().toISOString(),
+      });
+      this.addTaskLog(taskId, { level: 'error', message: `模拟失败：${error.message}` });
+      this.addTaskLog(taskId, { level: 'warning', message: '进入异常回退流程：已清理临时文件，释放计算资源' });
+      this.addTaskLog(taskId, { level: 'info', message: '建议：修正参数后重新提交模拟任务' });
+    }
+  }
+
   validateParams(params: TaskParams): { valid: boolean; errors: { field: string; message: string }[]; warnings: { field: string; message: string }[] } {
     const errors: { field: string; message: string }[] = [];
     const warnings: { field: string; message: string }[] = [];

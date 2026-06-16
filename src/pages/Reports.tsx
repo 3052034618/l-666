@@ -167,14 +167,21 @@ export const ReportsPage = () => {
       return;
     }
     try {
-      message.success('开始下载报告...');
-      // 模拟下载
+      message.loading({ content: '正在获取下载链接...', key: 'download' });
+      const result = await reportsAPI.downloadReport(report.id);
+      
+      const token = localStorage.getItem('token');
       const link = document.createElement('a');
-      link.href = '#';
-      link.download = `${report.name}.pdf`;
+      link.href = result.downloadUrl + (result.downloadUrl.includes('?') ? '&' : '?') + `token=${token}`;
+      link.download = result.fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      message.success({ content: '报告下载成功，可在浏览器中直接打开查看，或使用打印功能保存为PDF', key: 'download' });
     } catch (error: any) {
-      message.error(error.response?.data?.error || '下载失败');
+      message.error({ content: error.response?.data?.error || '下载失败', key: 'download' });
     }
   };
 
